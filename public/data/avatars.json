@@ -1,0 +1,26 @@
+{
+  "avatars": [
+    {
+      "id": 900,
+      "name": "Bill The Conquerer",
+      "img": "images/supergirl.png",
+      "wins": 0,
+      "stats": {
+        "strength": 15,
+        "agility": 10,
+        "intelligence": 27
+      }
+    },
+    {
+      "id": 88,
+      "name": "Jon the Coder",
+      "img": "images/homer.png",
+      "wins": 0,
+      "stats": {
+        "strength": 30,
+        "agility": 10,
+        "intelligence": 20
+      }
+    }
+    ]
+}

@@ -1,0 +1,209 @@
+<html>
+<head>
+    <style>
+        .hide {
+            display: none;
+        }
+
+        .avatar_img {
+            width: 100px;
+            height: 120px;
+        }
+
+        .fight_btn {
+            width: 100px;
+            height: 30px;
+            background-color: red;
+        }
+    </style>
+
+    <script src="javascripts/jquery-3.1.0.js"></script>
+    <script>
+        $(document).ready(function () {
+            init();
+        });
+
+        var avatars = {};
+
+        /** @class */
+        function AvatarStat() {
+            this.id = 0;
+            this.title = "";
+        }
+
+        /** @type(AvatarStat[]) */
+        var AVATAR_STATS = [];
+
+        function addStat(id, title) {
+            AVATAR_STATS.push({id: id, title: title});
+        }
+
+        //Add our stats and names in the order you want them displayed.
+        addStat("strength", "Strength");
+        addStat("intelligence", "Intelligence");
+        addStat("agility", "Agility");
+
+        /**
+         * @class
+         */
+        function Avatar() {
+            this.id = 0;
+            this.name = "";
+            this.img = "";
+            this.wins = 0;
+
+            /** @type(AvatarStat) */
+            this.stats = null;
+        }
+
+        /**
+         * @class
+         */
+        function AvatarStats() {
+            this.strength = 0;
+            this.agility = 0;
+            this.intelligence = 0;
+        }
+
+        function init() {
+            console.log("init");
+
+            $.getJSON("data/avatars.json", gotAvatarData);
+        }
+
+        /**
+         * @param data.avatars{Array.<{}>}
+         */
+        function gotAvatarData(data) {
+            console.log("gotAvatarData");
+            console.log(data);
+
+            var avatarSheetTemplate = $("#avatar_sheet_template");
+            var avatarStatTemplate = $("#avatar_stat_template");
+
+            var avatarContainer = $("#avatar_container");
+
+            if (data.hasOwnProperty("avatars")) {
+                avatars = data.avatars;
+                for (var t = 0; t < avatars.length; t++) {
+                    var avatar = avatars[t];
+                    displayAvatar(avatar, avatarContainer, avatarSheetTemplate, avatarStatTemplate);
+                }
+            }
+
+            $(".fight_btn").click(function () {
+               $.getJSON("fight", gotFightData);
+            });
+        }
+
+        /**
+         * @param {FightResult[]} fight
+         */
+        function gotFightData(fight) {
+            var fightResultView = $(".fight_result");
+
+            var fightDataLeft = fight[0];
+            var fightDataRight = fight[1];
+
+            var winnerFight, loserFight;
+
+            if (fightDataLeft.winner) {
+                winnerFight = fightDataLeft;
+                loserFight = fightDataRight;
+            } else {
+                winnerFight = fightDataRight;
+                loserFight = fightDataLeft;
+            }
+
+            var winner = getAvatar(winnerFight.avatarId);
+            var loser = getAvatar(loserFight.avatarId);
+
+            winner.wins++;
+
+            var resultText = winner.name + " dealt " + winnerFight.damageDealt + " damage and defeated " + loser.name + " who only did " + loserFight.damageDealt;
+
+            fightResultView.text(resultText);
+
+            var winsView = $("#avatar_sheet" + winner.id).find(".avatar_wins");
+            winsView.removeClass("hide");
+            winsView.text("Wins: " + winner.wins);
+        }
+
+        /**
+         * @return Avatar
+         */
+        function getAvatar(id) {
+            for (var t = 0; t < avatars.length; t++) {
+                var avatar = avatars[t];
+
+                if (avatar.id == id) {
+                    return avatar;
+                }
+            }
+        }
+
+
+        /**
+         * @param {Avatar} avatar
+         * @param avatarContainer
+         * @param avatarSheetTemplate
+         * @param avatarStatTemplate
+         */
+        function displayAvatar(avatar, avatarContainer, avatarSheetTemplate, avatarStatTemplate) {
+            console.log(avatar);
+            var avatarSheet = avatarSheetTemplate.clone();
+            avatarSheet.removeClass("hide");
+            avatarSheet.attr("id", "avatar_sheet" + avatar.id);
+
+            var statsContainer = avatarSheet.find(".avatar_stats");
+
+            avatarSheet.find(".avatar_name").text(avatar.name);
+            avatarSheet.find(".avatar_img").attr("src", avatar.img);
+
+            console.log(AVATAR_STATS);
+
+            for (var t = 0; t < AVATAR_STATS.length; t++) {
+                var stat = AVATAR_STATS[t];
+                var value = avatar.stats[stat.id];
+
+                var avatarStatView = avatarStatTemplate.clone();
+                avatarStatView.removeClass("hide");
+
+                avatarStatView.find(".stat_title").text(stat.title);
+                avatarStatView.find(".stat_value").text(value);
+
+                statsContainer.append(avatarStatView);
+            }
+
+            avatarContainer.append(avatarSheet);
+        }
+    </script>
+</head>
+<body>
+    <div id="avatar_sheet_template" class="hide">
+        <img class="avatar_img"/>
+        <p class="avatar_name"></p>
+        <p class="avatar_wins hide"></p>
+        <table class="avatar_stats" cellpadding="5">
+
+        </table>
+    </div>
+
+    <table class="hide">
+        <tr id="avatar_stat_template">
+            <td class="stat_title"></td>
+            <td class="stat_value"></td>
+        </tr>
+    </table>
+
+
+<div id="avatar_container"></div>
+
+<button class="fight_btn">fight</button>
+
+    <br/><br/>
+<div class="fight_result"></div>
+
+</body>
+
+</html>
